@@ -1,12 +1,21 @@
-////////////////////////////////////////////////////////////////////////
-// Copyright(c) 2017-2099, zhu, All Rights Reserved
-/// Author：  zhu peng cheng
-/// Created： 2017/12/28
-/// Describe：
-/////////////////////////////////////////////////////////////////////////
+/**
+ * @file Server.cpp
+ * @brief
+ * @author zhu peng cheng
+ * @version 1.0
+ * @date 2017-12-29
+ */
+#include <iosteam>
+using namespace std;
 
-
-int main()
+/**
+ * @brief Main fucntion
+ *
+ * @param argc argument count
+ * @param argv[] arument params
+ *
+ * @return exit value
+ */
+int main(int argc, char * argv[])
 {
-    return 0;
 }
