@@ -141,7 +141,7 @@ namespace GameSocketLib
         }
 
         /**
-         * @brief 请求建立远程连接
+         * @brief 请求建立远程连接, 客户端使用
          *
          * @param ip 连接ip
          * @param port 连接端口
@@ -154,11 +154,19 @@ namespace GameSocketLib
          * @param buf 发送的数据
          * @param size 发送的大小
          *
-         * @return
+         * @return 返回实际发送大小
          */
-        int Send(const char * buf, int size);
+        int Send(const char * buf, unsigned int size);
 
-        int Receive(const char * buf);
+        /**
+         * @brief 接收数据
+         *
+         * @param buf 接收数据缓冲区
+         * @param size 缓冲区大小
+         *
+         * @return 返回实际接收数据大小
+         */
+        int Receive(char * buf, unsigned int size);
 
         /**
          * @brief 关闭与远端的连接

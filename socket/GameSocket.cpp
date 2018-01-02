@@ -126,6 +126,12 @@ DataSocket ListeningSocket::Accept()
     return DataSocket(accept_socket);
 }
 
+void ListeningSocket::Close()
+{
+    BaseSocket::Close();
+    this->is_listening_ = false;
+}
+
 DataSocket::DataSocket(gsocket socket)
     : is_connected_(false), BaseSocket(socket)
 {
@@ -133,6 +139,7 @@ DataSocket::DataSocket(gsocket socket)
     if(socket != -1)
     {
         socklen_t size = sizeof(this->remote_info_);
+        // 获取远端的信息, 这里只由服务端使用，获取的是客户端的信息
         getpeername(socket, (struct sockaddr *)&remote_info_, &size);
         is_connected_ = true;
     }
@@ -144,7 +151,7 @@ void DataSocket::Connect(ipaddress ip, unsigned int port)
 
     if(is_connected_)
     {
-        return;
+        throw GameSocketException(SocketError::kHasConnected);
     }
 
     // 创建连接socket
@@ -152,7 +159,7 @@ void DataSocket::Connect(ipaddress ip, unsigned int port)
     {
         socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-        if(socklen_t_ == -1)
+        if(socket_ == -1)
         {
             throw GameSocketException();
         }
@@ -165,14 +172,80 @@ void DataSocket::Connect(ipaddress ip, unsigned int port)
     memset(&(remote_info_.sin_zero), 0, 8);
 
     // 连接
-    socklen_t size = sizeof(struct sockaddr);
-    err = connect(socket_, (struct sockaddr *)&remote_info_, &size);
+    socklen_t len = sizeof(struct sockaddr);
+    err = connect(socket_, (struct sockaddr *)&remote_info_, len);
     if(err == -1)
     {
         throw GameSocketException();
     }
 
     is_connected_ = true;
+
+    // 获取本地连接信息
+    err = getsockname(socket_, (struct sockaddr *)&(this->local_info_), &len);
+    if(err != 0)
+    {
+        throw GameSocketException();
+    }
+}
+
+int DataSocket::Send(const char * buf, unsigned int size)
+{
+    int err;
+
+    // 未连接
+    if(!this->is_connected_)
+    {
+        throw GameSocketException(SocketError::kNotConnected);
+    }
+
+    // 发送
+    err = send(socket_, buf, size, 0);
+    if(err == -1)
+    {
+        // 在非阻塞模式下发送缓冲区大小为0的时候也会返回-1，进行判断
+        GameSocketException socket_exception;
+
+        if(socket_exception.ErrorCode() != EAGAIN)
+        {
+            throw socket_exception;
+        }
+        err = 0;
+    }
+
+    return err;
+}
+
+int DataSocket::Receive(char * buf, unsigned int size)
+{
+    int err;
+
+    if(!this->is_connected_)
+    {
+        throw GameSocketException();
+    }
+
+    err = recv(socket_, buf, size, 0);
+    if(err == -1)
+    {
+        throw GameSocketException();
+    }
+
+    return err;
+}
+
+void DataSocket::Close()
+{
+    // 如果已经建立了连接，就先禁止数据的接收和发送
+    if(this->is_connected_)
+    {
+        shutdown(socket_, 2);
+    }
+
+    // 关闭连接
+    BaseSocket::Close();
+
+    this->is_connected_ = false;
 }
 
 }

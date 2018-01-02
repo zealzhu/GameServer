@@ -15,27 +15,45 @@
 namespace GameSocketLib
 {
 
+enum SocketError
+{
+    kHasConnected = 500,        // 已连接
+    kNotConnected,              // 未连接
+};
+
 class GameSocketException : public std::exception
 {
 public:
 
-    GameSocketException() : error_code_(errno)
-    {}
+    GameSocketException()
+    {
+        error_code_ = SocketError(errno);
+    }
 
-    GameSocketException() :
+    GameSocketException(SocketError err_code) : error_code_(err_code)
+    {}
 
     inline int ErrorCode() const
     {
         return this->error_code_;
     }
 
-    inline const char * PrintError()
+    inline const char * PrintError() const
     {
-        return strerror(this->error_code_);
+        SocketError err_code = SocketError(error_code_);
+        switch(err_code)
+        {
+        case kHasConnected:
+            return "Has connected.";
+        case kNotConnected:
+            return "Not connected.";
+        default:
+            return strerror(this->error_code_);
+        }
     }
 
 protected:
-    int error_code_;
+    SocketError error_code_;
 };
 
 }
