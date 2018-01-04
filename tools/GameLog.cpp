@@ -54,7 +54,10 @@ bool GameLog::Init(const std::string & file_name, int size_mb, int number_files)
         // 输出到控制台
         if(ConfigManager::GetConfigParam("log.enableconsole", "true") == "true")
         {
-            sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+            // 直接控制台没有颜色
+            // auto stdout_sink = spdlog::sinks::stdout_sink_mt::instance();
+            auto color_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+            sinks.push_back(color_sink);
         }
 
         // 创建spdlog
