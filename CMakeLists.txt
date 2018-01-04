@@ -38,4 +38,4 @@ add_subdirectory(tools)
 
 add_executable(server Server.cpp)
 
-target_link_libraries(server libtools)
+target_link_libraries(server pthread libtools)
