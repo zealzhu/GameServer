@@ -19,6 +19,7 @@ enum SocketError
 {
     kHasConnected = 500,        // 已连接
     kNotConnected,              // 未连接
+    kSocketLimitReached,        // socket连接上限
 };
 
 class GameSocketException : public std::exception

@@ -14,6 +14,8 @@
 namespace GameSocketLib
 {
 
+const int MAX = FD_SETSIZE;
+
 class GameSocketSet
 {
 public:
