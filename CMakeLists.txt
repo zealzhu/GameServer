@@ -31,4 +31,11 @@ else()
     endif()
 endif()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
+
 add_subdirectory(socket)
+add_subdirectory(tools)
+
+add_executable(server Server.cpp)
+
+target_link_libraries(server libtools)
