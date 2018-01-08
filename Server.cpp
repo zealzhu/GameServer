@@ -8,6 +8,7 @@
 
 #include "tools/ConfigManager.h"
 #include "tools/GameLog.h"
+#include "protocol/Protocol.h"
 
 #include <iostream>
 #include <thread>
@@ -71,7 +72,7 @@ void CreateServerThread()
 int main(int argc, char * argv[])
 {
     // 初始化日志
-    GameTools::GameLog::Init("log/server.log", 10, 10);
+    GameTools::GameLog::Init("", 10, 10);
 
 
     // 创建服务线程
