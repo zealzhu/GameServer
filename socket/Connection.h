@@ -9,6 +9,8 @@
 #define _CONNECTION_H
 
 #include "GameSocket.h"
+//#include <protocol/Protocol.h>
+
 #include <string>
 
 namespace GameSocketLib
@@ -19,6 +21,8 @@ const static int RECEIVE_HEADER_SIZE = sizeof(int);
 class Connection : public DataSocket
 {
 public:
+    Connection() = default;
+    Connection(DataSocket & sock);
     // 发送缓存
     void SendBuffer();
 
@@ -26,7 +30,7 @@ public:
     void Receive();
 
     // 标记需要关闭
-    inline void Close() { this->should_close_ = true; }
+    inline void SetShouldClose() { this->should_close_ = true; }
 
     // 是否需要关闭
     inline bool GetShouldClose() { return this->should_close_; }
@@ -41,7 +45,7 @@ protected:
 
     // 仅仅标记是否要关闭，如果为false则会通过连接管理器进行关闭
     bool should_close_;
-}
+};
 }
 
 #endif
