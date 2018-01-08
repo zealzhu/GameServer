@@ -31,9 +31,24 @@ else()
     endif()
 endif()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# 日志库
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
 
+# 消息头文件
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/msg)
+
+# libmsg
+add_subdirectory(msg)
+
+# libsocket
 add_subdirectory(socket)
+
+# libprotocol
+add_subdirectory(protocol)
+
+# libtools
 add_subdirectory(tools)
 
 add_executable(server Server.cpp)
