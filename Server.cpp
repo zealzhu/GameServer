@@ -9,9 +9,14 @@
 #include "tools/ConfigManager.h"
 #include "tools/GameLog.h"
 #include "protocol/Protocol.h"
+#include "socket/GameSocketLib.h"
+#include "msg/MessageManager.h"
+#include <BaseMsg.pb.h>
 
 #include <iostream>
 #include <thread>
+
+bool done = false;
 
 /**
  * @brief 用来处理接收的数据
@@ -19,46 +24,127 @@
 void ReceiveThreadTask()
 {
     logger_info("启动接收线程");
+
+    auto & msg_manager = MessageManager::Instance();
+    while(!done)
+    {
+        try
+        {
+            if(msg_manager.IsReceiveDequeEmpty())
+            {
+                std::this_thread::yield();
+                continue;
+            }
+
+            auto msg = msg_manager.GetReceiveMessage();
+
+            if(nullptr == msg.get())
+            {
+                logger_error("Receive msg is nullptr");
+                return;
+            }
+            logger_debug("开始处理接收的消息, 类型：{}", msg->GetTypeName());
+
+            // 传递给业务处理模块进行处理
+        }
+        catch(...)
+        {
+            logger_error("Receive error");
+        }
+    }
 }
 
 /**
  * @brief 用来处理要发送的数据
  */
-void SendThreadTask()
+void SendThreadTask(GameSocketLib::ConnectionManager * conn_manager)
 {
     logger_info("启动发送线程");
+
+    auto & msg_manager = MessageManager::Instance();
+    while(!done)
+    {
+        try
+        {
+            if(msg_manager.IsResponseDequeEmpty())
+            {
+                std::this_thread::yield();
+                continue;
+            }
+
+            auto msg = msg_manager.GetResponseMessage();
+            // 消息指针强转
+            std::shared_ptr<zhu::SelfDescribingMessage> resp_msg = std::dynamic_pointer_cast<zhu::SelfDescribingMessage>(msg);
+
+            if(nullptr == msg.get())
+            {
+                 logger_error("消息指针转换失败");
+                 continue;
+            }
+
+            // 发送给所有要发送的连接
+            for(int i = 0; i < resp_msg->socket_size(); i++)
+            {
+                conn_manager->SendMsg(resp_msg->socket(i), msg.get());
+            }
+        }
+        catch(...)
+        {
+            logger_error("发送消息出错");
+        }
+    }
 }
 
 /**
  * @brief 用来接收连接
  */
-void ConnectThreadTask()
+void NewConnectThreadTask(GameSocketLib::ListeningManager * listen_manager)
 {
     logger_info("启动连接线程");
+
+    while(!done)
+    {
+        try
+        {
+            listen_manager->Listen();
+            std::this_thread::yield();
+        }
+        catch(...)
+        {
+            logger_error("监听新连接出错");
+        }
+    }
 }
 
 /**
  * @brief 用来处理已连接的socket
  */
-void SocketManagerThreadTask()
+void SocketManagerThreadTask(GameSocketLib::ConnectionManager * conn_manager)
 {
     logger_info("启动socket管理线程");
+    while(!done)
+    {
+        try
+        {
+            conn_manager->Manager();
+            std::this_thread::yield();
+        }
+        catch(...)
+        {
+            logger_error("ConnectionManager::Manager error");
+        }
+    }
 }
 
-void CreateServerThread()
+bool HandleConsoleInput()
 {
-    // 创建四个需要用到的线程
-    std::thread receive_thread(ReceiveThreadTask);
-    receive_thread.join();
+    std::string input;
+    std::cin >> input;
 
-    std::thread send_thread(SendThreadTask);
-    send_thread.join();
+    if(input == "exit")
+        return false;
 
-    std::thread connect_thread(ConnectThreadTask);
-    connect_thread.join();
-
-    std::thread socket_manager_thread(SocketManagerThreadTask);
-    socket_manager_thread.join();
+    return true;
 }
 
 /**
@@ -72,12 +158,36 @@ void CreateServerThread()
 int main(int argc, char * argv[])
 {
     // 初始化日志
-    GameTools::GameLog::Init("", 10, 10);
+    GameTools::GameLog::Init("log/server.log", 10, 10);
 
+    // 初始化消息队列
+    MessageManager::Instance().Init();
+
+    // 创建监听以及连接管理器
+    GameSocketLib::ConnectionManager connection_manager;
+    GameSocketLib::ListeningManager listen_manager;
+
+    // 监听端口
+    unsigned int port = atoi(GameTools::ConfigManager::GetConfigParam("net.port", "9999").c_str());
+    listen_manager.AddPort(port);
+    listen_manager.SetConnectionManager(&connection_manager);
 
     // 创建服务线程
-    CreateServerThread();
+    std::vector<std::thread> threads;
+    threads.push_back(std::thread(NewConnectThreadTask, &listen_manager));
+    threads.push_back(std::thread(SocketManagerThreadTask, &connection_manager));
+    threads.push_back(std::thread(ReceiveThreadTask));
+    threads.push_back(std::thread(SendThreadTask, &connection_manager));
 
     // 主线程用来接收输入
+    while(HandleConsoleInput()) {}
+
+    done = true;
+
+    // 等待线程退出
+    for(auto & thread : threads)
+    {
+        thread.join();
+    }
     return 0;
 }
