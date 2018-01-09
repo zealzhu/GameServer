@@ -44,6 +44,9 @@ public:
         // 网络配置
         config_map["net.port"] = reader.Get("net", "port", "9999");     // 端口
 
+        // 消息队列
+        config_map["msg.maxsize"] = reader.Get("msg", "maxsize", "9999");               // 消息队列中最大消息数
+
         // 数据库配置
         config_map["db.ip"] = reader.Get("db", "ip", "127.0.0.1");                      // 数据库地址
         config_map["db.port"] = reader.Get("db", "port", "3306");                       // 数据库端口
