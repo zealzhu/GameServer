@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(game-socket-lib)
 
+find_package(Protobuf REQUIRED)
+
 message(STATUS "CMake version: " ${CMAKE_VERSION})
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.2")
     set(CMAKE_CXX_STANDARD 11)
@@ -32,25 +34,22 @@ else()
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-# 日志库
+#include_directories(${PROTOBUF_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
-
-# 消息头文件
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/msg)
 
 # libmsg
 add_subdirectory(msg)
 
-# libsocket
-add_subdirectory(socket)
-
 # libprotocol
 add_subdirectory(protocol)
+
+# libsocket
+add_subdirectory(socket)
 
 # libtools
 add_subdirectory(tools)
 
 add_executable(server Server.cpp)
 
-target_link_libraries(server pthread libtools)
+target_link_libraries(server pthread libtools libsocket libmsg)
