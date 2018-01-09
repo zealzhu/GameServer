@@ -2,7 +2,7 @@ set(INPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 file(GLOB PROTO_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/*.proto)
 
 set(PROTOBUF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../protobuf)
-set(PROTOC ${PROTOBUF_DIR}/lib/protoc)
+set(PROTOC ${PROTOBUF_DIR}/protoc)
 set(PROTOC_C_OUT_FLAG --cpp_out)
 set(PROTO_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR})
 message(STATUS "PROTOC = ${PROTOC}")
@@ -32,4 +32,7 @@ include_directories(${PROTOBUF_DIR}/include)
 link_directories(${PROTOBUF_DIR}/lib)
 
 add_library(proto STATIC ${PROTO_GEN})
-target_link_libraries(proto gprotobuf)
+target_link_libraries(proto protobuf)
+
+aux_source_directory(. MESSAGE_SOURCES)
+add_library(libmsg STATIC ${MESSAGE_SOURCES})
