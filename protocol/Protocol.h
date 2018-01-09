@@ -8,8 +8,10 @@
 #ifndef _GAME_PROTOCOL_H
 #define _GAME_PROTOCOL_H
 
-#include <socket/Connection.h>
+#include <socket/GameSocketType.h>
 #include <google/protobuf/message.h>
+
+const static int RECEIVE_HEADER_SIZE = sizeof(int);
 
 namespace ProtocolLib
 {
@@ -20,16 +22,16 @@ class Protocol
 {
 public:
     // 序列化数据成消息并插入消息队列
-    static void Translate(const char * buffer, unsigned int size);
+    static void Translate(GameSocketLib::gsocket sock, const char * buffer, unsigned int size);
 
     // 解码
-    static MessagePtr Decode();
+    static MessagePtr Decode(GameSocketLib::gsocket sock, const char * buffer, unsigned int size);
 
     // 编码
-    static char * Encode(const MessagePtr msg, unsigned int size);
+    static void Encode(const google::protobuf::Message & msg, std::string * out_buffer);
 
     // 读取头部大小
-    static unsigned int ReadHead(const char * buff, int size);
+    static unsigned int ReadHead(const char * buff, unsigned int size);
 
     static google::protobuf::Message * CreateMessage(const std::string & type_name);
 };
