@@ -14,6 +14,7 @@
 #include <errno.h>          // errno
 #include <netdb.h>          // gethostbyname()
 #include <fcntl.h>          // file control
+#include <arpa/inet.h>      // ntohl() htonl()
 
 namespace GameSocketLib
 {

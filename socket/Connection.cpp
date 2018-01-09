@@ -6,9 +6,22 @@
  * @date 2018-01-05
  */
 #include "Connection.h"
+#include <protocol/Protocol.h>
 
 namespace GameSocketLib
 {
+
+Connection::Connection(DataSocket & socket)
+    : DataSocket(socket)
+{
+    Initialize();
+}
+
+void Connection::Initialize()
+{
+    this->send_buffer_.clear();
+    this->should_close_ = false;
+}
 
 void Connection::SendBuffer()
 {
@@ -22,42 +35,42 @@ void Connection::SendBuffer()
     }
 }
 
-//void Connection::Receive()
-//{
-    //unsigned int total_received = 0;
-    //unsigned int received = 0;
-    //unsigned int message_size = 0;
+void Connection::Receive()
+{
+    unsigned int total_received = 0;
+    unsigned int received = 0;
+    unsigned int message_size = 0;
 
-    //{
-        //char head_buffer[RECEIVE_HEADER_SIZE] = { 0 };
+    {
+        char head_buffer[RECEIVE_HEADER_SIZE] = { 0 };
 
-        //// 接收头
-        //do
-        //{
-            //received = DataSocket::Receive(head_buffer + total_received, RECEIVE_HEADER_SIZE - total_received);
-            //total_received += received;
+        // 接收头
+        do
+        {
+            received = DataSocket::Receive(head_buffer + total_received, RECEIVE_HEADER_SIZE - total_received);
+            total_received += received;
 
-        //} while(total_received != RECEIVE_HEADER_SIZE);
-        //total_received = 0;
-        //message_size = Protocol::ReadHead(head_buffer, RECEIVE_HEADER_SIZE);
-    //}
+        } while(total_received != RECEIVE_HEADER_SIZE);
+        total_received = 0;
+        message_size = ProtocolLib::Protocol::ReadHead(head_buffer, RECEIVE_HEADER_SIZE);
+    }
 
-    //{
-        //const int size = message_size;
-        //char buffer[size] = 0;
+    {
+        // 创建一个数组缓存
+        const int size = message_size;
+        char buffer[size] = { 0 };
 
-        //// 接收数据本身
-        //do
-        //{
-            //received = DataSocket::Receive(buffer + total_received, size - total_receivedi);
-            //total_received += received;
-        //} while(total_received != size);
+        // 接收数据本身
+        do
+        {
+            received = DataSocket::Receive(buffer + total_received, size - total_received);
+            total_received += received;
+        } while(total_received != size);
 
-        //// 传输数据
-        //Protocol::Translate(GetSocket(), buffer, size);
-    //}
-//}
-
+        // 传输数据
+        ProtocolLib::Protocol::Translate(BaseSocket::GetSocket(), buffer, size);
+    }
+}
 
 }
 

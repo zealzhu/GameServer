@@ -37,6 +37,11 @@ void ListeningManager::Listen()
             if(this->socket_set_.HasActivity(lsock.GetSocket()))
             {
                 sock = lsock.Accept();
+
+                if(this->connections_manager_)
+                {
+                    this->connections_manager_->AddConnection(sock);
+                }
             }
         }
     }

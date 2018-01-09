@@ -7,6 +7,8 @@
  */
 #include "ConnectionManager.h"
 #include "Connection.h"
+
+#include <protocol/Protocol.h>
 #include <tools/GameLog.h>
 
 namespace GameSocketLib
@@ -32,11 +34,17 @@ void ConnectionManager::AddConnection(DataSocket & sock)
     this->connection_list_.emplace_back( conn );
 }
 
-void ConnectionManager::Manager()
+void ConnectionManager::SendMsg(gsocket sock, void * msg)
 {
-    this->Recv();
-    this->Send();
-    this->CloseConnections();
+    auto it = std::find_if(this->connection_list_.begin(), this->connection_list_.end(),
+            [sock](const Connection & conn){
+                return conn.GetSocket() == sock;
+            });
+    if(it == this->connection_list_.end())
+        return;
+
+    google::protobuf::Message * protobuf_msg = (google::protobuf::Message *)msg;
+    ProtocolLib::Protocol::Encode(*protobuf_msg, it->GetBufferData());
 }
 
 void ConnectionManager::Recv()
@@ -50,19 +58,23 @@ void ConnectionManager::Recv()
 
     if(size > 0)
     {
-        for(auto & conn : this->connection_list_)
+        auto it = this->connection_list_.begin();
+        decltype(it) conn_it;
+
+        while(it != this->connection_list_.end())
         {
-            if(this->socket_set_.HasActivity(conn.GetSocket()))
+            conn_it = it++;
+            if(this->socket_set_.HasActivity(conn_it->GetSocket()))
             {
                 try
                 {
-                    conn.Receive();
+                    conn_it->Receive();
                 }
                 catch(...)
                 {
                     // 任何异常都进行关闭连接
-                    conn.SetShouldClose();
-                    this->Close(conn.GetSocket());
+                    conn_it->SetShouldClose();
+                    this->Close(conn_it);
                 }
             }
         }
@@ -71,23 +83,34 @@ void ConnectionManager::Recv()
 
 void ConnectionManager::Send()
 {
+    auto it = this->connection_list_.begin();
+    decltype(it) conn_it;
 
+    while(it != this->connection_list_.end())
+    {
+        conn_it = it++;
+        if(this->socket_set_.HasActivity(conn_it->GetSocket()))
+        {
+        try
+        {
+            conn_it->SendBuffer();
+        }
+        catch(...)
+        {
+            // 任何异常都进行关闭连接
+            conn_it->SetShouldClose();
+            this->Close(conn_it);
+        }
+        }
+    }
 }
 
-void ConnectionManager::Close(gsocket sock)
+void ConnectionManager::Close(CONNECTION_ITER iter)
 {
-    auto it = std::find_if(this->connection_list_.end(), this->connection_list_.end(),
-            [sock](const Connection & conn){
-                return (conn.GetSocket() == sock);
-            });
-
-    if(it == this->connection_list_.end())
-        return;
-
-    logger_info("connection {}:{} 关闭, sock {}", it->GetRemoteAddress(), it->GetRemotePort(), sock);
-    it->CloseSocket();
-    this->connection_list_.erase(it);
-    this->socket_set_.RemoveSocket(sock);
+    logger_info("connection {}:{} 关闭, sock {}", iter->GetRemoteAddress(), iter->GetRemotePort(), iter->GetSocket());
+    iter->CloseSocket();
+    this->connection_list_.erase(iter);
+    this->socket_set_.RemoveSocket(iter->GetSocket());
 }
 
 void ConnectionManager::CloseConnections()
@@ -98,9 +121,10 @@ void ConnectionManager::CloseConnections()
     while(it != this->connection_list_.end())
     {
         close_it = it++;
+        // 判断是否需要关闭进行关闭
         if(close_it->GetShouldClose() == true)
         {
-            this->Close(close_it->GetSocket());
+            this->Close(close_it);
         }
     }
 }

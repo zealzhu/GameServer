@@ -19,6 +19,7 @@ namespace GameSocketLib
 class ConnectionManager
 {
     typedef std::list<Connection> CONNECTION_LIST;
+    typedef std::list<Connection>::iterator CONNECTION_ITER;
 public:
     ConnectionManager();
 
@@ -55,7 +56,12 @@ public:
      * 2、发送
      * 3、关闭
      */
-    void Manager();
+    inline void Manager()
+    {
+        this->Recv();
+        this->Send();
+        this->CloseConnections();
+    }
 
     /**
      * @brief 发送消息到匹配到的连接缓存
@@ -86,7 +92,7 @@ protected:
      *
      * @param sock
      */
-    void Close(gsocket sock);
+    void Close(CONNECTION_ITER iter);
 
 
 private:

@@ -9,20 +9,28 @@
 #define _CONNECTION_H
 
 #include "GameSocket.h"
-//#include <protocol/Protocol.h>
-
 #include <string>
 
 namespace GameSocketLib
 {
 
-const static int RECEIVE_HEADER_SIZE = sizeof(int);
 
 class Connection : public DataSocket
 {
 public:
     Connection() = default;
     Connection(DataSocket & sock);
+
+    inline std::string * GetBufferData()
+    {
+       return &(this->send_buffer_);
+    }
+
+    /**
+     * @brief 初始化
+     */
+    void Initialize();
+
     // 发送缓存
     void SendBuffer();
 

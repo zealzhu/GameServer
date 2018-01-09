@@ -10,6 +10,7 @@
 
 #include "GameSocket.h"
 #include "GameSocketSet.h"
+#include "ConnectionManager.h"
 #include <list>
 
 namespace GameSocketLib
@@ -30,9 +31,20 @@ public:
      */
     void Listen();
 
+    /**
+     * @brief 设置连接管理器
+     *
+     * @param manager
+     */
+    inline void SetConnectionManager(ConnectionManager * manager)
+    {
+        this->connections_manager_ = manager;
+    }
+
 private:
     std::list<ListeningSocket> socket_list_;
     GameSocketSet socket_set_;
+    ConnectionManager * connections_manager_;
 };
 
 }
