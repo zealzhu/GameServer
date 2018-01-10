@@ -7,6 +7,8 @@
  */
 #include "ListeningManager.h"
 #include "GameSocketException.h"
+#include <tools/GameLog.h>
+#include <iostream>
 
 namespace GameSocketLib
 {
@@ -24,6 +26,7 @@ void ListeningManager::AddPort(unsigned int port)
     sock.SetBlocking(false);
     this->socket_list_.push_back(sock);
     this->socket_set_.AddSocket(sock.GetSocket());
+    logger_info("监听端口：{}", port);
 }
 
 void ListeningManager::Listen()
@@ -36,6 +39,7 @@ void ListeningManager::Listen()
         {
             if(this->socket_set_.HasActivity(lsock.GetSocket()))
             {
+                std::cout << "检测到新连接" << std::endl;
                 sock = lsock.Accept();
 
                 if(this->connections_manager_)

@@ -32,6 +32,7 @@ void ConnectionManager::AddConnection(DataSocket & sock)
     conn.SetBlocking(false);
     this->socket_set_.AddSocket(conn.GetSocket());
     this->connection_list_.emplace_back( conn );
+    logger_info("connection {}:{} 已连接 sock {}", conn.GetRemoteAddress(), conn.GetRemotePort(), conn.GetSocket());
 }
 
 void ConnectionManager::SendMsg(gsocket sock, void * msg)
