@@ -56,4 +56,4 @@ add_subdirectory(tools)
 
 add_executable(server Server.cc)
 
-target_link_libraries(server pthread libtools libsocket msg libmodule)
+target_link_libraries(server tools socket msg module)
