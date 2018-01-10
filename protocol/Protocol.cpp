@@ -22,7 +22,7 @@ void Protocol::Translate(GameSocketLib::gsocket sock, const char * buffer, unsig
     MessageManager::Instance().InsertReceiveMessage(msg);
 }
 
-MessagePtr Protocol::Decode(GameSocketLib::gsocket sock, const char * buffer, unsigned int size)
+Protocol::MessagePtr Protocol::Decode(GameSocketLib::gsocket sock, const char * buffer, unsigned int size)
 {
     // 反序列化
     std::shared_ptr<zhu::SelfDescribingMessage> message(new zhu::SelfDescribingMessage());

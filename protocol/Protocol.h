@@ -15,11 +15,9 @@ const static int RECEIVE_HEADER_SIZE = sizeof(int);
 
 namespace ProtocolLib
 {
-
-typedef std::shared_ptr<google::protobuf::Message> MessagePtr;
-
 class Protocol
 {
+    typedef std::shared_ptr<google::protobuf::Message> MessagePtr;
 public:
     // 序列化数据成消息并插入消息队列
     static void Translate(GameSocketLib::gsocket sock, const char * buffer, unsigned int size);
