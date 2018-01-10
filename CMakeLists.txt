@@ -50,6 +50,9 @@ add_subdirectory(socket)
 # libtools
 add_subdirectory(tools)
 
+# libmodule
+add_subdirectory(module)
+
 add_executable(server Server.cpp)
 
-target_link_libraries(server pthread libtools libsocket libmsg)
+target_link_libraries(server pthread libtools libsocket libmsg libmodule)

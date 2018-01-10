@@ -11,7 +11,7 @@
 #include "protocol/Protocol.h"
 #include "socket/GameSocketLib.h"
 #include "msg/MessageManager.h"
-#include <BaseMsg.pb.h>
+#include "module/ModuleManager.h"
 
 #include <iostream>
 #include <thread>
@@ -46,12 +46,14 @@ void ReceiveThreadTask()
             logger_debug("开始处理接收的消息, 类型：{}", msg->GetTypeName());
 
             // 传递给业务处理模块进行处理
+            GameModule::ModuleManager::Instance().DispatchMessage(msg);
         }
         catch(...)
         {
             logger_error("Receive error");
         }
     }
+    logger_info("接收线程退出");
 }
 
 /**
@@ -93,6 +95,7 @@ void SendThreadTask(GameSocketLib::ConnectionManager * conn_manager)
             logger_error("发送消息出错");
         }
     }
+    logger_info("发送线程退出");
 }
 
 /**
@@ -114,6 +117,7 @@ void NewConnectThreadTask(GameSocketLib::ListeningManager * listen_manager)
             logger_error("监听新连接出错");
         }
     }
+    logger_info("连接线程退出");
 }
 
 /**
@@ -121,7 +125,7 @@ void NewConnectThreadTask(GameSocketLib::ListeningManager * listen_manager)
  */
 void SocketManagerThreadTask(GameSocketLib::ConnectionManager * conn_manager)
 {
-    logger_info("启动socket管理线程");
+    logger_info("启动连接管理线程");
     while(!done)
     {
         try
@@ -134,6 +138,7 @@ void SocketManagerThreadTask(GameSocketLib::ConnectionManager * conn_manager)
             logger_error("ConnectionManager::Manager error");
         }
     }
+    logger_info("连接管理线程退出");
 }
 
 bool HandleConsoleInput()
@@ -172,6 +177,11 @@ int main(int argc, char * argv[])
     listen_manager.AddPort(port);
     listen_manager.SetConnectionManager(&connection_manager);
 
+    // 初始化模块管理器
+    auto & module_manager = GameModule::ModuleManager::Instance();
+    module_manager.SetConnectionManager(connection_manager);
+    module_manager.InitModules();
+
     // 创建服务线程
     std::vector<std::thread> threads;
     threads.push_back(std::thread(NewConnectThreadTask, &listen_manager));
@@ -182,6 +192,7 @@ int main(int argc, char * argv[])
     // 主线程用来接收输入
     while(HandleConsoleInput()) {}
 
+    // 线程退出标志
     done = true;
 
     // 等待线程退出
