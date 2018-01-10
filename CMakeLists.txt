@@ -36,6 +36,8 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/msg)
+set(PROTOBUF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/protobuf)
+include_directories(${PROTOBUF_DIR}/include)
 
 # libmsg
 add_subdirectory(msg)

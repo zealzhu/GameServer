@@ -1,7 +1,6 @@
 set(INPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 file(GLOB PROTO_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/*.proto)
 
-set(PROTOBUF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../protobuf)
 set(PROTOC ${PROTOBUF_DIR}/protoc)
 set(PROTOC_C_OUT_FLAG --cpp_out)
 set(PROTO_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -28,7 +27,6 @@ foreach(PROTO_FILE ${PROTO_INPUT})
     )
 endforeach(PROTO_FILE ${PROTO_INPUT})
 
-include_directories(${PROTOBUF_DIR}/include)
 link_directories(${PROTOBUF_DIR}/lib)
 
 add_library(proto STATIC ${PROTO_GEN})
