@@ -25,6 +25,8 @@ public:
     virtual void HandleMessage(MessagePtr message) = 0;
 
     virtual std::string GetModuleName() = 0;
+
+    virtual ~ModuleInterface() {}
 }; // end ModuleInterface
 
 }

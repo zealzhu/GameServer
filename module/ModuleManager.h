@@ -10,6 +10,8 @@
 #define _MODULE_MANAGER_H
 
 #include "ModuleInterface.h"
+#include "user/UserMgr.h"
+
 #include <socket/ConnectionManager.h>
 #include <tools/GameLog.h>
 
@@ -63,6 +65,9 @@ public:
     void InitModules()
     {
         // 这里面创建模块
+        std::shared_ptr< UserMgr > user_mgr(new UserMgr());
+        user_mgr->Init();
+        this->AddModule(user_mgr);
     }
 
     std::string GetModuleName(std::string type_name)
