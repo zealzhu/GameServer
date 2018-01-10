@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(game-server)
 
 #find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED)
 
 message(STATUS "CMake version: " ${CMAKE_VERSION})
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.2")
@@ -36,8 +37,6 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/msg)
-set(PROTOBUF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/protobuf)
-include_directories(${PROTOBUF_DIR}/include)
 
 # libmsg
 add_subdirectory(msg)
@@ -48,12 +47,13 @@ add_subdirectory(protocol)
 # libsocket
 add_subdirectory(socket)
 
-# libtools
-add_subdirectory(tools)
-
 # libmodule
 add_subdirectory(module)
 
+# libtools
+add_subdirectory(tools)
+
+
 add_executable(server Server.cc)
 
-target_link_libraries(server pthread libtools libsocket libmsg libmodule)
+target_link_libraries(server pthread libtools libsocket msg libmodule)
