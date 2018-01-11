@@ -12,6 +12,7 @@
 #include "socket/GameSocketLib.h"
 #include "msg/MessageManager.h"
 #include "module/ModuleManager.h"
+#include "db/DBConnectionPool.h"
 
 #include <iostream>
 #include <thread>
@@ -181,6 +182,9 @@ int main(int argc, char * argv[])
     auto & module_manager = GameModule::ModuleManager::Instance();
     module_manager.SetConnectionManager(connection_manager);
     module_manager.InitModules();
+
+    // 初始化数据库连接池
+    //GameDB::DBConnectionPool::Instance();
 
     // 创建服务线程
     std::vector<std::thread> threads;
