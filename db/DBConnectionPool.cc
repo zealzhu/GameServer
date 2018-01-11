@@ -31,8 +31,8 @@ DBConnectionPool::DBConnectionPool(std::string user_name, std::string password, 
         logger_error("运行出错，{}", e.what());
     }
     // 初始化数据库连接池，只初始化一半的大小
-    InitConnectionPool(max_size / 2);
     this->current_pool_size_ = max_size / 2;
+    InitConnectionPool(max_size / 2);
 }
 
 DBConnectionPool::DBConnectionPool(const DBConnectionPool&)
