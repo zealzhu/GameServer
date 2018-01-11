@@ -49,3 +49,6 @@ build
 ._.DS_Store
 .DS_Store
 !db/lib
+!db/lib/*.a
+!db/lib/*.so
+
