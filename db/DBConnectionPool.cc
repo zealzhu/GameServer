@@ -16,9 +16,20 @@ DBConnectionPool::DBConnectionPool(std::string user_name, std::string password, 
     : user_name_(sql::SQLString(user_name)), password_(sql::SQLString(password)), url_(sql::SQLString(url)),
     max_pool_size_(max_size), current_pool_size_(0)
 {
-    // 获取driver
-    this->driver_ = sql::mysql::get_mysql_driver_instance();
-
+    try
+    {
+        // 获取driver
+        this->driver_ = sql::mysql::get_mysql_driver_instance();
+        logger_info("url:{} 用户名;{} 密码:{}", url, user_name, password);
+    }
+    catch(sql::SQLException & e)
+    {
+        logger_error("驱动连接出错，{}", e.what());
+    }
+    catch(std::runtime_error & e)
+    {
+        logger_error("运行出错，{}", e.what());
+    }
     // 初始化数据库连接池，只初始化一半的大小
     InitConnectionPool(max_size / 2);
     this->current_pool_size_ = max_size / 2;
@@ -32,7 +43,7 @@ DBConnectionPool::DBConnectionPool(const DBConnectionPool&)
 DBConnectionPool & DBConnectionPool::Instance()
 {
     using ConfigMgr = GameTools::ConfigManager;
-    static std::string user_name = ConfigMgr::GetConfigParam("db.uesr", "root");
+    static std::string user_name = ConfigMgr::GetConfigParam("db.uesr", "zhu");
     static std::string pwd = ConfigMgr::GetConfigParam("db.password", "no080740");
     static std::string max_size = GameTools::ConfigManager::GetConfigParam("db.maxpoolsize", "10");
     static std::string url = "tcp://" + ConfigMgr::GetConfigParam("db.ip", "120.78.219.164") + ":"
@@ -62,17 +73,26 @@ void DBConnectionPool::AddConnections(int size)
 
     for(int i = 0; i < size; i++)
     {
-        sql::Connection * conn = this->driver_->connect(this->url_, this->user_name_, this->password_);
-        ConnectionPtr connPtr(conn);
-        this->connection_list_.emplace_back(std::move(connPtr));
-        ++success;
+        sql::Connection * conn;
+        try
+        {
+            conn = this->driver_->connect(this->url_, this->user_name_, this->password_);
+            ConnectionPtr connPtr(conn);
+            this->connection_list_.emplace_back(std::move(connPtr));
+            ++success;
+        }
+        catch(sql::SQLException & e)
+        {
+            logger_error("驱动连接出错，{}", e.what());
+            return;
+        }
+        catch(std::runtime_error & e)
+        {
+            logger_error("运行出错, {}", e.what());
+            return;
+        }
     }
 
-   /* logger_info("新增数据库连接成功。数据库url:tcp://{}:{}, 用户名:{}, 新增数量:{}",*/
-            //this->connection_properties_["hostName"],
-            //this->connection_properties_["port"],
-            //this->connection_properties_["userName"],
-            /*success);*/
     logger_info("当前可用连接数：{}", this->current_pool_size_);
 }
 

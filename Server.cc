@@ -184,7 +184,7 @@ int main(int argc, char * argv[])
     module_manager.InitModules();
 
     // 初始化数据库连接池
-    //GameDB::DBConnectionPool::Instance();
+    GameDB::DBConnectionPool::Instance();
 
     // 创建服务线程
     std::vector<std::thread> threads;

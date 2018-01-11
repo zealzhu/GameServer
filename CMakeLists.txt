@@ -62,3 +62,4 @@ add_subdirectory(db)
 add_executable(server Server.cc)
 
 target_link_libraries(server tools socket msg module db)
+target_link_libraries(server mysqlcppconn)
