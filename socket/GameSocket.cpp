@@ -37,8 +37,8 @@ void BaseSocket::SetBlocking(bool is_blocking)
     // 接受错误
     err = fcntl(this->socket_, F_SETFL, flag);
 
-    // 有错误抛异常
-    if(err == -1)
+    // 有错误抛异常,0正常退出,-1异常退出
+    if(err <= 0)
     {
         throw(GameSocketException());
     }
@@ -226,7 +226,9 @@ int DataSocket::Receive(char * buf, unsigned int size)
     }
 
     err = recv(socket_, buf, size, 0);
-    if(err == -1)
+
+    // 0正常关闭，-1异常关闭
+    if(err <= 0)
     {
         throw GameSocketException();
     }
