@@ -50,10 +50,11 @@ public:
         // 数据库配置
         config_map["db.ip"] = reader.Get("db", "ip", "127.0.0.1");                      // 数据库地址
         config_map["db.port"] = reader.Get("db", "port", "3306");                       // 数据库端口
-        config_map["db.name"] = reader.Get("db", "name", "ddz");                        // 数据库名
+        config_map["db.scheme"] = reader.Get("db", "name", "ddz");                        // 数据库名
         config_map["db.user"] = reader.Get("db", "user", "root");                       // 数据库用户名
         config_map["db.password"] = reader.Get("db", "password", "no080740");           // 数据库密码
         config_map["db.maxpoolsize"] = reader.Get("db", "maxpoolsize", "10");           // 数据库池最大容量
+        config_map["db.reconnect"] = reader.Get("db", "reconnect", "true");           // 是否自动重连
 
         // 日志配置
         config_map["log.level"] = reader.Get("log", "level", "trace");                  // 日志输出等级
