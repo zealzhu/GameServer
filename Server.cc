@@ -13,6 +13,7 @@
 #include "msg/MessageManager.h"
 #include "module/ModuleManager.h"
 #include "db/DBConnectionPool.h"
+#include "MainCommand.h"
 
 #include <iostream>
 #include <thread>
@@ -24,7 +25,7 @@ bool done = false;
  */
 void ReceiveThreadTask()
 {
-    logger_info("启动接收线程");
+    logger_debug("启动接收线程");
 
     auto & msg_manager = MessageManager::Instance();
     while(!done)
@@ -54,7 +55,7 @@ void ReceiveThreadTask()
             logger_error("Receive error");
         }
     }
-    logger_info("接收线程退出");
+    logger_debug("接收线程退出");
 }
 
 /**
@@ -62,7 +63,7 @@ void ReceiveThreadTask()
  */
 void SendThreadTask(GameSocketLib::ConnectionManager * conn_manager)
 {
-    logger_info("启动发送线程");
+    logger_debug("启动发送线程");
 
     auto & msg_manager = MessageManager::Instance();
     while(!done)
@@ -96,7 +97,7 @@ void SendThreadTask(GameSocketLib::ConnectionManager * conn_manager)
             logger_error("发送消息出错");
         }
     }
-    logger_info("发送线程退出");
+    logger_debug("发送线程退出");
 }
 
 /**
@@ -104,7 +105,7 @@ void SendThreadTask(GameSocketLib::ConnectionManager * conn_manager)
  */
 void NewConnectThreadTask(GameSocketLib::ListeningManager * listen_manager)
 {
-    logger_info("启动连接线程");
+    logger_debug("启动连接线程");
 
     while(!done)
     {
@@ -118,7 +119,7 @@ void NewConnectThreadTask(GameSocketLib::ListeningManager * listen_manager)
             logger_error("监听新连接出错");
         }
     }
-    logger_info("连接线程退出");
+    logger_debug("连接线程退出");
 }
 
 /**
@@ -126,7 +127,7 @@ void NewConnectThreadTask(GameSocketLib::ListeningManager * listen_manager)
  */
 void SocketManagerThreadTask(GameSocketLib::ConnectionManager * conn_manager)
 {
-    logger_info("启动连接管理线程");
+    logger_debug("启动连接管理线程");
     while(!done)
     {
         try
@@ -139,19 +140,9 @@ void SocketManagerThreadTask(GameSocketLib::ConnectionManager * conn_manager)
             logger_error("ConnectionManager::Manager error");
         }
     }
-    logger_info("连接管理线程退出");
+    logger_debug("连接管理线程退出");
 }
 
-bool HandleConsoleInput()
-{
-    std::string input;
-    std::cin >> input;
-
-    if(input == "exit")
-        return false;
-
-    return true;
-}
 
 /**
  * @brief Main fucntion
@@ -185,6 +176,7 @@ int main(int argc, char * argv[])
 
     // 初始化数据库连接池
     GameDB::DBConnectionPool::Instance();
+    GameDB::DBHelp::Instance();
 
     // 创建服务线程
     std::vector<std::thread> threads;
@@ -194,7 +186,10 @@ int main(int argc, char * argv[])
     threads.push_back(std::thread(SendThreadTask, &connection_manager));
 
     // 主线程用来接收输入
-    while(HandleConsoleInput()) {}
+    while(Command::HandleConsoleInput())
+    {
+        std::this_thread::yield();
+    }
 
     // 线程退出标志
     done = true;
