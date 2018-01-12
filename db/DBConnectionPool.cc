@@ -14,7 +14,7 @@ namespace GameDB
 {
 DBConnectionPool::DBConnectionPool(std::string user_name, std::string password, std::string url, int max_size)
     : user_name_(sql::SQLString(user_name)), password_(sql::SQLString(password)), url_(sql::SQLString(url)),
-    max_pool_size_(max_size), current_pool_size_(0)
+    max_pool_size_(max_size), current_pool_size_(0), thread_finish_(false), driver_(nullptr)
 {
     try
     {
@@ -33,6 +33,9 @@ DBConnectionPool::DBConnectionPool(std::string user_name, std::string password, 
     // 初始化数据库连接池，只初始化一半的大小
     this->current_pool_size_ = max_size / 2;
     InitConnectionPool(max_size / 2);
+
+    // 开启检查线程
+    this->check_thread_ = std::thread(&DBConnectionPool::ShrinkConnectNum, this);
 }
 
 DBConnectionPool::DBConnectionPool(const DBConnectionPool&)
@@ -56,6 +59,9 @@ DBConnectionPool & DBConnectionPool::Instance()
 
 DBConnectionPool::~DBConnectionPool()
 {
+    // 等待线程退出
+    this->thread_finish_ = true;
+    this->check_thread_.join();
     // 释放所有连接
     this->DestoryConnectionPool();
 }
@@ -209,6 +215,37 @@ void DBConnectionPool::ReturnConnection(ConnectionPtr & conn)
 
     this->connection_list_.emplace_back(conn);
     logger_info("归还一个数据库连接，可用连接数：{}，当前连接池大小：{}", this->GetAvailableConnectionSize(), this->current_pool_size_);
+}
+
+void DBConnectionPool::ShrinkConnectNum()
+{
+    logger_debug("启动数据库连接检查线程");
+
+    // 最后一次可用连接数
+    int last_available = this->GetAvailableConnectionSize();
+    int cur_available = last_available;
+
+    int check_interval = atoi(GameTools::ConfigManager::GetConfigParam("db.checkinterval", "10").c_str());
+
+    while(!thread_finish_)
+    {
+        {
+            std::lock_guard<std::mutex> lck(this->lock_);
+            cur_available = this->GetAvailableConnectionSize();
+            logger_trace("前一次可用连接：{} 当前可用连接：{}", last_available, cur_available);
+
+            // 当可用连接大于连接池一半时且上一次与当前可用连接一样时减少一个连接
+            if(cur_available > this->max_pool_size_ / 2 && last_available == cur_available)
+            {
+                this->DestoryOneConnection();
+                --this->current_pool_size_;
+            }
+            last_available = this->GetAvailableConnectionSize();
+        }
+        // 等待
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 * check_interval));
+    }
+    logger_debug("退出数据库连接检查线程");
 }
 
 }

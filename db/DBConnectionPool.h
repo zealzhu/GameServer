@@ -18,6 +18,7 @@
 
 namespace GameDB
 {
+// 所有Connection都需要手动释放，因此使用智能指针进行管理
 typedef std::shared_ptr<sql::Connection> ConnectionPtr;
 
 class DBConnectionPool
@@ -74,6 +75,8 @@ private:
 
     void DestoryOneConnection();
 
+    void ShrinkConnectNum();
+
     // 数据库连接驱动
     sql::mysql::MySQL_Driver * driver_;
 
@@ -89,6 +92,8 @@ private:
     sql::SQLString url_;
 
     std::mutex lock_;
+    bool thread_finish_;
+    std::thread check_thread_;
 };
 
 } // namespace GameDB

@@ -5,6 +5,8 @@ namespace GameDB
 enum ErrorCode
 {
     kNoAvailiableConnection,
+    kInsertError,
+    kUpdateError,
 };
 
 class Exception : std::exception
@@ -16,8 +18,12 @@ public:
     {
         switch(this->error_code_)
         {
-            case ErrorCode::kNoAvailiableConnection:
+        case ErrorCode::kNoAvailiableConnection:
             return "无可用连接";
+        case ErrorCode::kInsertError:
+            return "插入错误";
+        case ErrorCode::kUpdateError:
+            return "更新错误";
         default:
             return "未知错误";
         }
