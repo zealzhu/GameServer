@@ -219,16 +219,28 @@ void DBConnectionPool::ReturnConnection(ConnectionPtr & conn)
 
 void DBConnectionPool::ShrinkConnectNum()
 {
+    using namespace std::chrono;
     logger_debug("启动数据库连接检查线程");
 
     // 最后一次可用连接数
     int last_available = this->GetAvailableConnectionSize();
     int cur_available = last_available;
 
+    // 检查间隔
     int check_interval = atoi(GameTools::ConfigManager::GetConfigParam("db.checkinterval", "10").c_str());
+    // 检查时间
+    time_point<system_clock, seconds> pre_time = time_point_cast<seconds>(system_clock::now());
+    // 当前时间
+    time_point<system_clock, seconds> cur_time;
+    // 时间差
+    duration<int> time_span;
 
     while(!thread_finish_)
     {
+        cur_time = time_point_cast<seconds>(system_clock::now());
+        time_span = duration_cast< duration< int > >(cur_time - pre_time);
+        // 计算时间差是否大于时间间隔
+        if(time_span.count() >= check_interval)
         {
             std::lock_guard<std::mutex> lck(this->lock_);
             cur_available = this->GetAvailableConnectionSize();
@@ -241,9 +253,12 @@ void DBConnectionPool::ShrinkConnectNum()
                 --this->current_pool_size_;
             }
             last_available = this->GetAvailableConnectionSize();
+            // 更新之前的时间
+            pre_time = time_point_cast<seconds>(system_clock::now());
         }
-        // 等待
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000 * check_interval));
+        // 如果使用sleep等待的话主线程如果退出还要等到唤醒才结束
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000 * check_interval));
+        std::this_thread::sleep_for(milliseconds(1000));
     }
     logger_debug("退出数据库连接检查线程");
 }
