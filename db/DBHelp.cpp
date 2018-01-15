@@ -120,26 +120,28 @@ size_t DBHelp::InsertRecord(const std::string & table_name, const RecordData & c
     // 创建一个statement
     StatementPtr state(conn->createStatement());
 
-    int affected_rows = state->executeUpdate(sql::SQLString(insert_sql));
+    int affected_rows = 0;
+    try
+    {
+        affected_rows = state->executeUpdate(sql::SQLString(insert_sql));
+    }
+    catch(const sql::SQLException & e)
+    {
+        logger_error("插入失败：{}", e.what());
+    }
     // 返回给数据库连接池
     DBConnectionPool::Instance().ReturnConnection(conn);
-
-    //if(affected_rows != 0)
-    //{
-        //logger_error("插入数据错误，请检查数据的格式");
-        //throw Exception(ErrorCode::kInsertError);
-    //}
 
     return affected_rows;
 }
 
-std::string DBHelp::BuildUpdateSQL(const std::string & table_name, const RecordData & column_map, const std::string & where)
+std::string DBHelp::BuildUpdateSQL(const std::string & table_name, const RecordData & column_map, const RecordData & where_map)
 {
     using namespace std;
     ostringstream set_values;
-    auto it_end = column_map.end();
 
-    for(auto it = column_map.begin(); it != it_end; ++it)
+    // set
+    for(auto it = column_map.begin(); it != column_map.end(); ++it)
     {
         // 第一条数据前面不要逗号
         if(it == column_map.begin())
@@ -174,14 +176,14 @@ std::string DBHelp::BuildUpdateSQL(const std::string & table_name, const RecordD
     }
 
     ostringstream update_sql_stream;
-    update_sql_stream << "update " << table_name << " set " << set_values.str() << " where " << where;
+    update_sql_stream << "update " << table_name << " set " << set_values.str() << " where " << BuildWhere(where_map);
 
     return update_sql_stream.str();
 }
 
-size_t DBHelp::UpdateRecord(const std::string & table_name, const RecordData & column_map, const std::string & where)
+size_t DBHelp::UpdateRecord(const std::string & table_name, const RecordData & column_map, const RecordData & where_map)
 {
-    std::string update_sql = this->BuildUpdateSQL(table_name, column_map, where);
+    std::string update_sql = this->BuildUpdateSQL(table_name, column_map, where_map);
     logger_debug("SQL 更新语句：{}", update_sql);
 
     // 从连接池中获取一个连接
@@ -189,7 +191,15 @@ size_t DBHelp::UpdateRecord(const std::string & table_name, const RecordData & c
     // 创建一个statement
     StatementPtr state(conn->createStatement());
 
-    int affected_rows = state->executeUpdate(sql::SQLString(update_sql));
+    int affected_rows = 0;
+    try
+    {
+        affected_rows = state->executeUpdate(sql::SQLString(update_sql));
+    }
+    catch(const sql::SQLException & e)
+    {
+        logger_error("更新失败：{}", e.what());
+    }
     // 返回给数据库连接池
     DBConnectionPool::Instance().ReturnConnection(conn);
 
@@ -213,14 +223,37 @@ size_t DBHelp::DeleteRecord(const std::string & table_name, const std::string & 
     // 创建一个statement
     StatementPtr state(conn->createStatement());
 
-    int affected_rows = state->executeUpdate(sql::SQLString(delete_sql_stream.str()));
+    int affected_rows = 0;
+
+    try
+    {
+        affected_rows = state->executeUpdate(sql::SQLString(delete_sql_stream.str()));
+    }
+    catch(const sql::SQLException & e)
+    {
+        logger_error("删除失败：{}", e.what());
+    }
     // 返回给数据库连接池
     DBConnectionPool::Instance().ReturnConnection(conn);
 
     return affected_rows;
 }
 
-QueryData DBHelp::QueryRecord(const std::string query_sql)
+std::string DBHelp::BuildQuerySQL(const std::string & table, const std::string & field, const RecordData & where_map)
+{
+    std::ostringstream sql;
+    sql << "select " << field << " from " << table << " where " << BuildWhere(where_map);
+
+    return sql.str();
+}
+
+QueryData DBHelp::QueryRecord(const std::string & table, const std::string & fields, const RecordData & where_map)
+{
+    std::string query_sql = BuildQuerySQL(table, fields, where_map);
+    return QueryRecord(query_sql);
+}
+
+QueryData DBHelp::QueryRecord(const std::string & query_sql)
 {
     logger_debug("SQL 查询语句：{}", query_sql);
     QueryData query_data;
@@ -270,6 +303,48 @@ QueryData DBHelp::QueryRecord(const std::string query_sql)
     DBConnectionPool::Instance().ReturnConnection(conn);
 
     return query_data;
+
+}
+
+std::string DBHelp::BuildWhere(const RecordData & where_map)
+{
+    std::ostringstream where;
+
+    auto it_end = where_map.end();
+    for(auto it = where_map.begin(); it != it_end; ++it)
+    {
+        // 第一条数据前面不要逗号
+        if(it == where_map.begin())
+        {
+            // 列名
+            where << it->first << "=";
+            // 列名对应值
+            if(it->second.first == DBType::kDBStr)
+            {
+                where << "'" << it->second.second << "'";
+            }
+            else
+            {
+                where << it->second.second;
+            }
+        }
+        // 后面的都要加个逗号
+        else
+        {
+            // 列名
+            where << "," << it->first << "=";
+            // 列名对应值
+            if(it->second.first == DBType::kDBStr)
+            {
+                where << "'" << it->second.second;
+            }
+            else
+            {
+                where << it->second.second;
+            }
+        }
+    }
+    return where.str();
 }
 
 } // namespace GameDB

@@ -25,6 +25,7 @@ enum DBType
     kDBStr,
     kDBFloat,
 };
+
 // 记录数据 列名 <-> { 数据类型, 数据 }
 typedef std::map< std::string, std::pair< DBType, std::string > > RecordData;
 // 查询返回的数据 可能不止一条数据因此用vector 每条记录都是一个map集合 列名 <-> 数据
@@ -72,7 +73,7 @@ public:
      *
      * @return 返回sql语句
      */
-    std::string BuildUpdateSQL(const std::string & table_name, const RecordData & column_map, const std::string & where);
+    std::string BuildUpdateSQL(const std::string & table_name, const RecordData & column_map, const RecordData & where_map);
 
     /**
      * @brief 更新记录
@@ -83,7 +84,7 @@ public:
      *
      * @return 受影响行数
      */
-    size_t UpdateRecord(const std::string & table_name, const RecordData & column_map, const std::string & where);
+    size_t UpdateRecord(const std::string & table_name, const RecordData & column_map, const RecordData & where_map);
 
     /**
      * @brief 删除记录
@@ -95,6 +96,8 @@ public:
      */
     size_t DeleteRecord(const std::string & table_name, const std::string & where);
 
+    std::string BuildQuerySQL(const std::string & table, const std::string & field, const RecordData & where_map);
+
     /**
      * @brief 查询数据
      *
@@ -102,10 +105,14 @@ public:
      *
      * @return 返回查询数据
      */
-    QueryData QueryRecord(const std::string query_sql);
+    QueryData QueryRecord(const std::string & table, const std::string & field, const RecordData & where_map);
+
+    QueryData QueryRecord(const std::string & query_sql);
 private:
     DBHelp();
     ~DBHelp();
+
+    std::string BuildWhere(const RecordData & where_map);
 
     static DBHelp * instance_;
 }; // DBHelp

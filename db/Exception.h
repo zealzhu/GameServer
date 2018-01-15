@@ -1,4 +1,7 @@
+#ifndef _GAME_DB_EXCEPTION_H
+#define _GAME_DB_EXCEPTION_H
 #include <exception>
+
 namespace GameDB
 {
 
@@ -34,4 +37,7 @@ public:
 private:
     ErrorCode error_code_;
 };
-}
+
+} // namespace GameDB
+
+#endif // _GAME_DB_EXCEPTION_H
