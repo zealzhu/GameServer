@@ -11,6 +11,9 @@
 
 #include "ModuleInterface.h"
 #include "user/UserMgr.h"
+//#include "room/RoomMgr.h"
+//#include "table/Table.h"
+//#include "score/ScoreMgr.h"
 
 #include <socket/ConnectionManager.h>
 #include <tools/GameLog.h>
@@ -70,6 +73,13 @@ public:
         this->AddModule(user_mgr);
     }
 
+    /**
+     * @brief
+     *
+     * @param type_name
+     *
+     * @return
+     */
     std::string GetModuleName(std::string type_name)
     {
         int index = type_name.find_last_of(".");
@@ -82,7 +92,7 @@ public:
         return module_name;
     }
 
-    void DispatchMessage(MessagePtr message)
+    void DispatchMessage(std::shared_ptr<google::protobuf::Message> message)
     {
         std::shared_ptr<zhu::SelfDescribingMessage> msg = std::dynamic_pointer_cast<zhu::SelfDescribingMessage>(message);
         if(nullptr == msg.get())
