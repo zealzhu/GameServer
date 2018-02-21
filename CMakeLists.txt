@@ -4,6 +4,10 @@ project(game-server)
 find_package(Boost REQUIRED)
 find_package(Protobuf REQUIRED)
 
+#set(CMAKE_BUILD_TYPE "release")
+#set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+#set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLASG} -O3 -Wall")
+
 message(STATUS "CMake version: " ${CMAKE_VERSION})
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.2")
     set(CMAKE_CXX_STANDARD 11)
@@ -34,32 +38,43 @@ else()
     endif()
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/msg)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tools)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/msg)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/net)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/protocol)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/module)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/db/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/db)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/timer)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/net/znet/pool)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/net)
 
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/db/lib)
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/db/lib)
+# libtools
+add_subdirectory(tools)
+
+add_subdirectory(timer)
 
 # libmsg
 add_subdirectory(msg)
 
-# libprotocol
-add_subdirectory(protocol)
-
-# libsocket
-add_subdirectory(socket)
+# libnet
+add_subdirectory(net)
 
 # libmodule
 add_subdirectory(module)
 
-# libtools
-add_subdirectory(tools)
-
 # libdb
 add_subdirectory(db)
 
-add_executable(server Server.cc)
 
-target_link_libraries(server tools socket msg module db)
-target_link_libraries(server mysqlcppconn)
+add_executable(server main.cc)
+add_executable(client client/client.cc)
+
+target_link_libraries(server tools net msg db module)
+target_link_libraries(server protobuf pthread mysqlcppconn)
+target_link_libraries(client protobuf pthread msg)
+target_link_libraries(client tools)
+#target_link_libraries(server mysqlcppconn)
