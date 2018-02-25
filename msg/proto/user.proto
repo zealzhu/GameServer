@@ -18,7 +18,7 @@ message LoginReq {
 
 
 message LoginResp {
-    required base.ERROR_CODE loginResult = 1;
+    required base.ERROR_CODE code = 1;
     optional bytes desc = 2;
     optional uint32 id = 3;
     optional bytes account = 4;
@@ -34,7 +34,6 @@ message Player {
     required bytes account = 2;
     required bytes password = 3;
     required bytes name = 4;
-    optional bytes email = 5;
 
     enum SexType {
         MALE = 0;
@@ -44,4 +43,9 @@ message Player {
 
     optional UserStatus status = 7;
     optional int32 money = 8;
+}
+
+message RegisterResp {
+    required base.ERROR_CODE code = 1;
+    required bytes desc = 2;
 }
