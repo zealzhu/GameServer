@@ -25,6 +25,8 @@ enum ERROR_CODE {
     COMB_FAIL= 17;
     MUST_PLAY = 18;
     CHOOSE_ERROR = 19;
+
+    USER_NOT_FOUND = 20;
 }
 
 message ErrorCode{

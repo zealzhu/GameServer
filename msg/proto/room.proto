@@ -52,6 +52,22 @@ message EnterRoomResp {
     optional uint32 rid = 3;
     optional uint32 index = 4;
     optional bool ready = 5;
+    repeated uint32 otherid = 6;
+}
+
+message GetSeatInfoReq {
+    required uint32 uid = 1;
+    required uint32 rid = 2;
+    required uint32 find = 3;
+}
+
+message GetSeatInfoResp {
+    required base.ERROR_CODE result = 1;
+    optional bytes desc = 2;
+    required uint32 uid = 3;
+    required uint32 index = 4;
+    required bytes account = 5;
+    required bool ready = 6;
 }
 
 //创建房间请求

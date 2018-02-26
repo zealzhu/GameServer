@@ -15,6 +15,7 @@ enum C2SProtobuf
     kC2SReady,
     kC2SLandlord,
     kC2SPlay,
+    kC2SGetSeatInfo,
 };
 
 enum S2CProtobuf
@@ -41,6 +42,7 @@ enum S2CProtobuf
     kS2CPlay,
     kS2CPlayNtf,
     kS2CGameOverNtf,
+    kS2CGetSeatInfo,
 };
 
 #endif
