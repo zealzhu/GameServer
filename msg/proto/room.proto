@@ -147,7 +147,9 @@ message LandlordResp {
 }
 
 message PlayReq {
-
+    required uint32 uid = 1;
+    required uint32 rid = 2;
+    repeated uint32 cid = 3;
 }
 message PlayResp {
     required base.ERROR_CODE result = 1;
@@ -164,4 +166,30 @@ message GameOverNtf{
     required uint32 rid = 1;
     required uint32 winner = 2;
     required uint32 landlord = 3;
+    required uint32 multiple = 4;
+}
+
+message LostFromRoomMsg {
+    required uint32 rid = 1;
+}
+
+message ReconnectReq {
+    required uint32 rid = 1;
+    required uint32 uid= 2;
+}
+
+message ReconnectResp {
+    required base.ERROR_CODE result = 1;
+    required uint32 index = 2;      // 位置
+    required uint32 current = 3;    // 当前操作用户
+    required uint32 landlord = 4;
+    repeated uint32 otherid = 5;
+    repeated uint32 cid = 6;
+
+    enum PlayState {
+        CALL = 0;
+        RUSH = 1;
+        PLAY = 2;
+    }
+    required PlayState state = 7;
 }

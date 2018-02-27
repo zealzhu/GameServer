@@ -27,6 +27,8 @@ enum ERROR_CODE {
     CHOOSE_ERROR = 19;
 
     USER_NOT_FOUND = 20;
+    ROOM_STATE_IS_NOT_PLAYING = 21;
+    NOT_FOUND_CARD = 22;
 }
 
 message ErrorCode{

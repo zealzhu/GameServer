@@ -16,6 +16,8 @@ enum C2SProtobuf
     kC2SLandlord,
     kC2SPlay,
     kC2SGetSeatInfo,
+
+    kC2SReconnect,
 };
 
 enum S2CProtobuf
@@ -43,6 +45,9 @@ enum S2CProtobuf
     kS2CPlayNtf,
     kS2CGameOverNtf,
     kS2CGetSeatInfo,
+
+    kS2CLostFromRoomMsg,
+    kS2CReconnect,
 };
 
 #endif
