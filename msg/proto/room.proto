@@ -122,6 +122,10 @@ message GameBeginNtf {
     required uint32 first = 2;
 }
 
+message RestartNtf {
+    required uint32 first = 1;
+}
+
 message PutCardNtf {
     required uint32 uid = 1;
     repeated uint32 cid = 2;
@@ -135,6 +139,8 @@ message LandlordNtf {
     required uint32 cindex = 1;
     required uint32 nindex = 2;
     required bool call = 3;
+    required bool ctype = 4;
+    required bool ntype = 5;
 }
 
 message LandlordReq {
@@ -159,6 +165,7 @@ message PlayNtf {
     required uint32 current = 1;
     required uint32 next = 2;
     repeated uint32 cid = 3;
+    required uint32 multiple = 4;
 }
 
 //游戏结束消息

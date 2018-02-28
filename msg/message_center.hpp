@@ -26,6 +26,8 @@ public:
     bool Initialize() {
         works_count_ = atoi(GConfig.GetConfigParam("msg.threads", "1").c_str());
         running_ = false;
+        processors_count_ = 0;
+        no_message_count_ = 0;
 
         auto modules = GModules.GetAllModule();
 
@@ -37,6 +39,7 @@ public:
             ModuleProcPtr proc(new ModuleProcessor);
             processors_map_[module.first] = proc;
             processors_que_.push(proc);
+            processors_count_++;
         }
         return true;
     }
@@ -109,10 +112,21 @@ private:
             processors_que_.pop();
 
             lck.unlock();
-            proc->Loop();
+            if(!proc->Loop()) {
+                no_message_count_++;
+            }
+            else {
+                no_message_count_ = 0;
+            }
 
             lck.lock();
             processors_que_.push(proc);
+            lck.unlock();
+
+            if(no_message_count_ >= processors_count_) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                no_message_count_--;
+            }
         }
     }
 
@@ -121,7 +135,9 @@ private:
     ~MessageCenter() = default;
 
     uint8_t works_count_;
+    uint16_t processors_count_;
     std::atomic< bool > running_;
+    std::atomic< int > no_message_count_;
     std::thread timer_thread_;
     std::vector< std::thread > threads_;
     std::unordered_map< std::string, ModuleProcPtr > processors_map_;

@@ -42,7 +42,7 @@ public:
         }
 
         // exec timer message
-        timer_queue_.Tick();
+        ret = timer_queue_.Tick();
 
         return ret;
     }

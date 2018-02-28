@@ -25,6 +25,7 @@ enum EventId
     kEventPutLandlordCardNtf,
     kEventPlayError,
     kEventPlaySuccess,
+    kEventGameRestart,
     kEventGameOver,
 };
 
