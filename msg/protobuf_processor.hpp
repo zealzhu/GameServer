@@ -69,7 +69,7 @@ public:
     }
 
     bool Dispatch(ISender * sender, proto::Protobuf & protobuf) {
-        auto it = handlers_.find(protobuf.ReadId());
+        auto it = handlers_.find(protobuf.GetId());
         if (it != handlers_.end()) {
             it->second->Call(sender, protobuf);
             return true;

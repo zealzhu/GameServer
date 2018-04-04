@@ -16,6 +16,11 @@
 #include <vector>
 #include <string>
 
+#define GDB GameDB::DBHelp::Instance()
+#define MAKE_INT_VALUE(v) std::make_pair<GameDB::DBType, std::string>(GameDB::DBType::kDBInt, std::to_string(v))
+#define MAKE_FLOAT_VALUE(v) std::make_pair<GameDB::DBType, std::string>(GameDB::DBType::kDBFloat, std::to_string(v))
+#define MAKE_STRING_VALUE(v) std::make_pair<GameDB::DBType, std::string>(GameDB::DBType::kDBStr, v.c_str())
+
 namespace GameDB
 {
     // 数据类型

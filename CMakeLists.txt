@@ -63,12 +63,11 @@ add_subdirectory(msg)
 # libnet
 add_subdirectory(net)
 
-# libmodule
-add_subdirectory(module)
-
 # libdb
 add_subdirectory(db)
 
+# libmodule
+add_subdirectory(module)
 
 add_executable(server main.cc)
 add_executable(client client/client.cc)

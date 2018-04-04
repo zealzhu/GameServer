@@ -8,12 +8,23 @@
 #ifndef _STRING_UTILS_H
 #define _STRING_UTILS_H
 
+#include <string>
 #include <sstream>
 
 namespace StringUtils
 {
 
 std::string IntToString(int value);
+
+bool IsValidAccount(const std::string& strAccount);
+
+bool IsValidPassword(const std::string& strPassword);
+
+bool IsValidMail(const std::string& strMail);
+
+bool IsValidMobile(const std::string& strMobile);
+
+bool IsValidHomeNumber(const std::string& strHomeNum);
 
 }
 

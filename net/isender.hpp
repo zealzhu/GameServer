@@ -6,6 +6,7 @@ class ISender
 {
 public:
     virtual int Send(int16_t id, google::protobuf::Message & msg) = 0;
+    virtual int32_t GetId() = 0;
 };
 
 #endif

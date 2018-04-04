@@ -13,6 +13,7 @@ public:
 class ITimer
 {
 public:
+    ITimer() : node_(nullptr) {}
     void SetNode(ITimerNode * node) {
         node_.store(node);
     }

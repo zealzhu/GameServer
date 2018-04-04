@@ -16,11 +16,12 @@ TcpSession * session = nullptr;
 class MessageAgent
 {
 public:
-    MessageAgent(int32_t uid, std::string name)
+    MessageAgent()
     {
-        uid_ = uid;
+        uid_ = 0;
         rid_ = 0;
-        name_ = name;
+        RegProtoHandler(this, kS2CLogin, &MessageAgent::LoginCB);
+
         RegProtoHandler(this, kS2CCreateRoom, &MessageAgent::CrtCB);
         RegProtoHandler(this, kS2CEnterRoom, &MessageAgent::EntCB);
         RegProtoHandler(this, kS2CGetRoom, &MessageAgent::GetRoomCB);
@@ -37,10 +38,11 @@ public:
     }
 
     bool Loop() {
-        printf("1.get\n2.create\n3.enter\n4.leave\n5.ready\n6.call\n");
+        printf("0.login\n1.get\n2.create\n3.enter\n4.leave\n5.ready\n6.call\n");
         int32_t choose = 0;
         scanf("%d", &choose);
         switch(choose) {
+        case 0: SendLogin(); break;
         case 1: SendGetRoom(); break;
         case 2: SendCreateRoom();break;
         case 3: SendEnterRoom();break;
@@ -52,6 +54,32 @@ public:
         }
         printf("\n");
         return true;
+    }
+
+    void LoginCB(user::LoginResp & rsp)
+    {
+        if(rsp.code() != SUCCESS) {
+            logger_info("login failed");
+            return;
+        }
+        logger_info("loggin success");
+        uid_ = rsp.id();
+        name_ = rsp.account();
+    }
+
+    void SendLogin()
+    {
+        char account[20];
+        char password[20];
+        printf("enter account: ");
+        scanf("%s", account);
+        printf("enter password: ");
+        scanf("%s", password);
+
+        LoginReq req;
+        req.set_account(account);
+        req.set_password(password);
+        session->Send(kC2SLogin, req);
     }
 
     void SendCreateRoom()
@@ -234,7 +262,7 @@ int main()
     znet::TcpService< TcpSession > service;
     service.config.threads = 1;
     service.config.app_run = true;
-    service.AddConnector("127.0.0.1", 9999);
+    service.AddConnector("120.78.219.164", 9999);
     service.Start([](znet::NetEvent evt, void * data) {
 
         switch(evt) {
@@ -250,13 +278,7 @@ int main()
         return nullptr;
     });
 
-    logger_info("enter you id:");
-    int32_t id;
-    scanf("%d", &id);
-    logger_info("enter you name:");
-    char name[50];
-    scanf("%s", name);
-    MessageAgent handler(id, name);
+    MessageAgent handler;
 
     while(handler.Loop());
 

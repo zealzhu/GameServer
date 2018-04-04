@@ -49,7 +49,7 @@ public:
 
     void AddTimer(ITimer * timer, int64_t delay, int32_t count, int64_t interval);
 
-    void Tick();
+    bool Tick();
 
     void KillAll();
 

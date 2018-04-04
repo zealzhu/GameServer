@@ -256,15 +256,15 @@ template< class Session, class Factory, typename Msg = char>
             int recv_len = 0;
             while(this->is_running_)
             {
-                printf("wait event.\n");
+                //printf("wait event.\n");
                 int ret = epoll_wait(epoll_proc_fd, wait_events, MAX_WAIT_EVENT, -1);// -1 wait forever
-                printf("event ret: %d\n", ret);
+                //printf("event ret: %d\n", ret);
 
                 // wait失败
                 if(ret < 0)
                 {
                     printf("wait failed.");
-                    continue;
+                    assert(false);
                 }
 
                 // 遍历所有的事件
@@ -316,6 +316,10 @@ template< class Session, class Factory, typename Msg = char>
                             size_t read_pos = 0;
                             // 断包(读取包大小)
                             int pkg_len = session->ReadPacket(session->GetRecvBuff(), session->GetRecvBuffPos());
+                            if(pkg_len == -1) {
+                                this->CloseSession(session, epoll_proc_fd);
+                                sessions.remove(session);
+                            }
                             while(pkg_len > 0)
                             {
                                 // 如果要读取的大小足够就读取

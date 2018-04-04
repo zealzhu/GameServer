@@ -34,6 +34,7 @@ void CardRoom::Initialize()
 
     for(int i = 0; i < 54; i++) {
         all_cards_.emplace_back(Card(i));
+        cards_map_[i] = Card(i);
     }
 
     state_ = kRoomWaiting;
@@ -41,6 +42,9 @@ void CardRoom::Initialize()
     id_ = 0;
     owner_ = 0;
     current_index_ = 0;
+    multiple_ = 0;
+    no_one_call_count_ = 0;
+    SetNode(nullptr);
 }
 
 void CardRoom::DealLandlord(bool call)
@@ -52,15 +56,17 @@ void CardRoom::DealLandlord(bool call)
     }
     else if(state_ == kRoomQiangLandlord) {
         seats_[current_index_].SetHasQiang(true);
+        if(call) multiple_ *= 2;
     }
     else {
         logger_error("error state.");
         return;
     }
 
+    bool qiang = state_ == kRoomCallLandlord ? false : true;
     int8_t cur = current_index_;
     LandlordRet ret = LoopJudgeLandlord();
-    LandlordNtf(cur, current_index_, call);
+    LandlordNtf(cur, current_index_, call, qiang);
     StopTimer();
 
     switch(ret) {
@@ -78,12 +84,26 @@ void CardRoom::DealLandlord(bool call)
         break;
     case kLandlordNoOneCall:
         logger_debug("no one call. restart");
-        BeginGame();
+        Restart();
         break;
     }
 }
+void CardRoom::Restart()
+{
+    no_one_call_count_++;
+    if(no_one_call_count_ == 3) {
+        current_index_ = landlord_index_;
+        state_ = kRoomPlaying;
+        PutLandlordCard();
+    }
+    else {
+        auto buff = CreateEvtBuf(kEventGameRestart);
+        buff->Append(id_);
+        ExecEvent(buff);
+    }
+}
 
-void CardRoom::LandlordNtf(int8_t cur, int8_t next, bool call)
+void CardRoom::LandlordNtf(int8_t cur, int8_t next, bool call, bool isQiang)
 {
     logger_debug("player {} call: {}, next: {}", cur, call, next);
     auto buff = new proto::EventBuff(kEventCallLandlordNtf);
@@ -91,6 +111,7 @@ void CardRoom::LandlordNtf(int8_t cur, int8_t next, bool call)
     buff->Append(cur);
     buff->Append(next);
     buff->Append(call);
+    buff->Append(isQiang);
     ExecEvent(buff);
 }
 
@@ -214,6 +235,24 @@ void CardRoom::OnLandlordExpire()
     DealLandlord(call);
 }
 
+bool CardRoom::DealPlay(std::vector< int8_t > & cids)
+{
+    std::vector< Card > out_cards;
+    for(auto & id : cids) {
+        auto it = cards_map_.find(id);
+        if(it == cards_map_.end()) {
+            return false;
+        }
+        out_cards.emplace_back(it->second);
+    }
+    if(CompareOut(out_cards) && state_ == kRoomPlaying) {
+        logger_debug("wait {} play", current_index_);
+        StopTimer();
+        START_TIMER(this, 0, 1, PLAY_EXPIRE);
+    }
+    return true;
+}
+
 void CardRoom::OnPlayingExpire()
 {
     std::vector< Card > out_cards;
@@ -298,7 +337,9 @@ int8_t CardRoom::BeginGame()
     state_ = kRoomCallLandlord;
     current_index_ = landlord_index_ = rand() % 3;
     no_play_count_ = 0;
+    no_one_call_count_ = 0;
     last_out_.type = kNoPlay;
+    multiple_ = 1;
 
     logger_debug("game begin. start timer.");
     START_TIMER(this, 0, 1, LANDLORD_EXPIRE);
@@ -327,6 +368,7 @@ void CardRoom::PutCard()
 
 void CardRoom::PutLandlordCard()
 {
+    auto & seat = seats_[landlord_index_];
     auto buff = new proto::EventBuff(kEventPutLandlordCardNtf);
     buff->Append(id_);
     buff->Append(landlord_index_);
@@ -334,7 +376,10 @@ void CardRoom::PutLandlordCard()
     for(auto & card : landlord_cards_)
     {
         buff->Append(card.id);
+        seat.GetCards().push_back(card);
+        seat.GetCardsMap()[card.id] = card;
     }
+    seat.Sort();
     ExecEvent(buff);
     START_TIMER(this, 0, 1, PLAY_EXPIRE);
 }
@@ -347,6 +392,7 @@ void CardRoom::Shuffle()
 
 void CardRoom::GameOver()
 {
+    StopTimer();
     state_ = kRoomEnd;
     logger_debug("game over. the winner index is {}", current_index_);
 
@@ -354,6 +400,7 @@ void CardRoom::GameOver()
     buff->Append(id_);
     buff->Append(current_index_);  // winner
     buff->Append(landlord_index_); // landlord
+    buff->Append(multiple_);
     ExecEvent(buff);
 }
 
@@ -363,10 +410,12 @@ void CardRoom::ResetRoom()
     for(auto & seat : seats_) {
         seat.SetReady(false);
     }
+    multiple_ = 1;
 }
 
 void CardRoom::SendPlayError(CombRet ret)
 {
+    logger_warn("play error {}", (int8_t)ret);
     auto buff = new proto::EventBuff(kEventPlayError);
     buff->Append(id_);
     buff->Append(seats_[current_index_].GetUID());
@@ -377,19 +426,19 @@ void CardRoom::SendPlayError(CombRet ret)
 void CardRoom::SendPlaySuccess(std::vector< Card > & cards)
 {
     auto buff = new proto::EventBuff(kEventPlaySuccess);
-    buff->Append((int32_t)id_);
-    buff->Append((int8_t)current_index_);
-    buff->Append((int8_t)(current_index_ + 1) % 3);
-    buff->Append((int16_t)cards.size());
+    buff->Append<int8_t>(cards.size());
+    buff->Append<int32_t>(id_);
+    buff->Append<int8_t>(current_index_);
+    buff->Append<int8_t>((current_index_ + 1) % 3);
     std::ostringstream os;
     os << "out grade: ";
     for(auto & card : cards)
     {
-        buff->Append(card.id);
-        os << (int32_t)card.grade << "";
+        buff->Append<int8_t>(card.id);
+        os << (int32_t)card.grade << " ";
     }
     seats_[current_index_].RemoveCards(cards);
-    logger_debug("{} out grade: {}. current size: {}", current_index_, os.str(), seats_[current_index_].GetCards().size());
+    logger_debug("out size: {}. {} out grade: {}. current size: {}", cards.size(), current_index_, os.str(), seats_[current_index_].GetCards().size());
     ExecEvent(buff);
 }
 
@@ -464,6 +513,7 @@ bool CardRoom::CompareOut(std::vector< Card > & cards)
                     return false;
                 }
             }
+            multiple_ *= 2;
             SendPlaySuccess(cards);
         }
         // other type

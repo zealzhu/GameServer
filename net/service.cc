@@ -16,7 +16,7 @@ bool GameService::Initialize()
     this->service_.config.backlogs = atoi(GConfig.GetConfigParam("net.backlogs", "10").c_str());
     this->service_.config.parser = true;
 
-    std::string host = GConfig.GetConfigParam("net.host", "127.0.0.1");
+    std::string host = GConfig.GetConfigParam("net.host", "0.0.0.0");
     uint16_t port = atoi(GConfig.GetConfigParam("net.port", "9999").c_str());
     this->service_.AddListener(host.c_str(), port);
     logger_info("listen host: {} port: {}", host, port);

@@ -3,7 +3,7 @@
 
 bool Compare(const Card & first, const Card & second)
 {
-    return first.grade < second.grade;
+    return first.grade > second.grade;
 }
 
 void Seat::Sort()

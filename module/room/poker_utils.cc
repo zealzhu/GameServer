@@ -6,8 +6,8 @@ bool PokerUtils::IsJokerBoom(std::vector< Card > & cards)
 {
     if(cards.size() != 2) return false;
 
-    if(cards[0].grade == 13 && cards[1].grade == 14) return true;
-    else if(cards[0].grade == 14 && cards[1].grade == 13) return true;
+    if(cards[0].grade == 15 && cards[1].grade == 14) return true;
+    else if(cards[0].grade == 14 && cards[1].grade == 15) return true;
 
     return false;
 }

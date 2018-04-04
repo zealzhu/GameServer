@@ -30,6 +30,9 @@ public:
     bool GetHasCall() { return has_call_; }
     bool GetIsLandlord() { return landlord_; }
     bool SetIsLandlord(bool call) { landlord_ = call; }
+    void SetCollocation(bool c) { collocation_ = c; }
+    bool GetCollocation() { return collocation_; }
+    int8_t GetCardsNumber() { return cards_.size(); }
 
     void Sort();
     void AutoPlay(std::vector< Card > & out_cards, CombType & last_out);
@@ -37,6 +40,7 @@ public:
     bool FindCards(std::vector< Card > & cards);
 
 private:
+    bool collocation_;
     bool empty_;
     bool ready_;
     bool has_qiang_;

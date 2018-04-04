@@ -96,7 +96,7 @@ std::string DBHelp::BuildInsertSQL(const std::string & table_name, const RecordD
             // 列名对应值
             if(it->second.first == DBType::kDBStr)
             {
-                columns_values << ",'" << it->second.second;
+                columns_values << ",'" << it->second.second << "'";
             }
             else
             {
@@ -167,7 +167,7 @@ std::string DBHelp::BuildUpdateSQL(const std::string & table_name, const RecordD
             // 列名对应值
             if(it->second.first == DBType::kDBStr)
             {
-                set_values << "'" << it->second.second;
+                set_values << "'" << it->second.second << "'";
             }
             else
             {
@@ -329,15 +329,15 @@ std::string DBHelp::BuildWhere(const RecordData & where_map)
                 where << it->second.second;
             }
         }
-        // 后面的都要加个逗号
+        // 后面的都要加个and
         else
         {
             // 列名
-            where << "," << it->first << "=";
+            where << " and " << it->first << "=";
             // 列名对应值
             if(it->second.first == DBType::kDBStr)
             {
-                where << "'" << it->second.second;
+                where << "'" << it->second.second << "'";
             }
             else
             {

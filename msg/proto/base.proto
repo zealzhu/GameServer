@@ -18,7 +18,7 @@ enum ERROR_CODE {
     PLAYER_NOT_IN_ROOM = 11;//用户不在房间中
     PLAYER_HAS_IN_ROOM = 12;//用户已经在房间中
     ERROR_HAS_READY = 13;//用户已经准备
-    ERROR_NOT_READY = 14; // 用户未准备
+    ERROR_USER_NOT_READY = 14; // 用户未准备
     ROOM_HAS_START = 15;
 
     NOT_TURN_YOU = 16;
@@ -34,4 +34,12 @@ enum ERROR_CODE {
 message ErrorCode{
     required ERROR_CODE code = 1;
     optional bytes desc = 2;
+}
+
+message HeartBeat {
+    required ERROR_CODE code = 1;
+}
+
+message HeartBeatAck {
+    required ERROR_CODE code = 1;
 }

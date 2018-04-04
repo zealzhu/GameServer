@@ -53,6 +53,7 @@ TimerQueue::~TimerQueue()
 
 void TimerQueue::AddTimer(ITimer * timer, int64_t delay, int32_t count, int64_t interval)
 {
+    assert(timer != nullptr);
     assert(timer->GetNode() == nullptr);
 
     TimerNode * node = new TimerNode(timer, delay, count, interval);
@@ -62,17 +63,18 @@ void TimerQueue::AddTimer(ITimer * timer, int64_t delay, int32_t count, int64_t 
 
 void TimerQueue::StopTimer(ITimer * timer)
 {
+    assert(timer != nullptr);
     auto timer_node = timer->GetNode();
     assert(timer_node != nullptr);
     timer_node->Stop();
     timer->SetNode(nullptr);
 }
 
-void TimerQueue::Tick()
+bool TimerQueue::Tick()
 {
     std::unique_lock< std::mutex > lck(lock_);
     if(timer_heap_.size() == 0) {
-        return;
+        return false;
     }
 
     int64_t current = duration_cast< nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
@@ -80,11 +82,11 @@ void TimerQueue::Tick()
 
     // not tick
     if(!top || current < top->GetExpire()) {
-        return;
+        return false;
     }
+    lck.unlock();
     // tick
     if(!top->IsStop()) {
-        lck.unlock();
         bool again = top->Run();
         PopTop();
         if(again) {
@@ -100,6 +102,7 @@ void TimerQueue::Tick()
         PopTop();
         delete top;
     }
+    return true;
 }
 
 void TimerQueue::KillAll()
