@@ -513,6 +513,11 @@ bool CardRoom::CompareOut(std::vector< Card > & cards)
                     return false;
                 }
             }
+
+            if(last_out_.type == kPlayDoubleJacker) {
+                SendPlayError(kCombFail);
+                return false;
+            }
             multiple_ *= 2;
             SendPlaySuccess(cards);
         }
