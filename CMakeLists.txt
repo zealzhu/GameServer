@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
-project(game-server)
+project(collect-server)
 
-find_package(Boost REQUIRED)
-find_package(Protobuf REQUIRED)
+if(UNIX)
+    find_package(Protobuf REQUIRED)
+    link_directories(${PROJECT_SOURCE_DIR}/build/linux/lib)
+endif()
 
 message(STATUS "CMake version: " ${CMAKE_VERSION})
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.2")
@@ -34,32 +36,21 @@ else()
     endif()
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/opt/spdlog/include)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/msg)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/db/include)
+add_definitions(-DPROTOBUF_USE_DLLS)
+add_definitions(-DASIO_STANDALONE)
+if(WIN32)
+	message(STATUS "ADD WIN32 MACROS")
+	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
+	add_definitions(-D_WIN32_WINDOWS)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DASIO_HAS_IOCP)
+	
+	set_property(GLOBAL PROPERTY USE_FOLDERS On)
+	link_directories(${PROJECT_SOURCE_DIR}/build/windows)
+else()
+    add_definitions(-DASIO_HAS_EPOLL)
+endif()
 
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/db/lib)
-
-# libmsg
-add_subdirectory(msg)
-
-# libprotocol
-add_subdirectory(protocol)
-
-# libsocket
-add_subdirectory(socket)
-
-# libmodule
-add_subdirectory(module)
-
-# libtools
-add_subdirectory(tools)
-
-# libdb
-add_subdirectory(db)
-
-add_executable(server Server.cc)
-
-target_link_libraries(server tools socket msg module db)
-target_link_libraries(server mysqlcppconn)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/core)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/module)
